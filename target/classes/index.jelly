@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    TODO
+    Enables scan docker images for vulnerabilities in Jenkins, push images to registries, and report results to the SecureCN server.
 </div>

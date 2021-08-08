@@ -1,0 +1,31 @@
+pipeline {
+    triggers {
+        pollSCM('H 8 * * *')
+    }
+    agent {
+        docker {
+            image 'gcr.io/gcp-etigcp-nprd-12855/pipelines/chuck_norris:v13'
+            args "-v /var/run/docker.sock:/var/run/docker.sock"
+            registryUrl 'https://gcr.io/'
+            registryCredentialsId 'k8sec-dev-gcr-sa'
+            label "portshift"
+        }
+    }
+    environment {
+        GCS_ARTIFACTS = credentials("eti-cloud-gcr-file")
+    }
+    stages {
+        stage('build') {
+            steps {
+                //build project
+                sh ("mvn package -B")
+                //upload binary to eti cloud
+                sh '''
+                    gcloud auth activate-service-account --key-file ${GCS_ARTIFACTS}
+                    echo "Uploading Jenkins plugin"
+                    gsutil cp -a public-read -r ${WORKSPACE}/target/securecn-scanner.hpi gs://securecn-artifacts/jenkins-plugin/${GIT_COMMIT}/
+                '''
+            }
+        }
+    }
+}
